@@ -21,7 +21,7 @@ The automation handles invoice ingestion, text extraction, AI-based understandin
 ![Workflow Screenshot](Images/workflow-overview.png)
 
 ### 🖼️ Generated results:
-![mailed Screenshot](Images/email-automation.png.png)
+![mailed Screenshot](Images/email-automation.png)
 
 
 ---
