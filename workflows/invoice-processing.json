@@ -1,0 +1,1112 @@
+{
+  "name": "Zero-Touch AI Invoice Processing",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1JyL3OsXmVmNhPXwThQOexourmw2CDsgZ",
+          "mode": "list",
+          "cachedResultName": "invoices",
+          "cachedResultUrl": "https://drive.google.com/drive/exo2CDsgZ"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -768,
+        -176
+      ],
+      "id": "a3ccdbe4-508a-4bc5-88e8-ccb69769e2ba",
+      "name": "Google Drive Trigger",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "jZL1JOPbOulprXs8",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -448,
+        -144
+      ],
+      "id": "e8fbba04-63be-45eb-a1b3-941cbd8e50f1",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -624,
+        -176
+      ],
+      "id": "d6d0b26d-5671-4710-ba66-2c606697ce30",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "jZL1JOPbOulprXs8",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.text }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "Invoice No",
+              "description": "invoice number"
+            },
+            {
+              "name": "Invoice Date",
+              "description": "Invoice Date"
+            },
+            {
+              "name": "Due Date",
+              "description": "Due Date"
+            },
+            {
+              "name": "Company Name",
+              "description": "Company Name"
+            },
+            {
+              "name": "Phone",
+              "description": "Phone"
+            },
+            {
+              "name": "Email",
+              "description": "Email"
+            },
+            {
+              "name": "Total Amount",
+              "description": "Total Amount"
+            },
+            {
+              "name": "Bank Name",
+              "description": "Bank Name"
+            },
+            {
+              "name": "Account No",
+              "description": "Account No"
+            },
+            {
+              "name": "IFSC",
+              "description": "IFSC"
+            },
+            {
+              "name": "UPI",
+              "description": "UPI"
+            },
+            {
+              "name": "Payment Status",
+              "description": "Payment Status"
+            }
+          ]
+        },
+        "options": {
+          "systemPromptTemplate": "You are an expert extraction algorithm.\nOnly extract relevant information from the text.\nIf you do not know the value of an attribute asked to extract, you may omit the attribute's value."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        -288,
+        -144
+      ],
+      "id": "de6ab37f-6854-4ccd-ac9d-49f08a72c494",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output }}",
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "Input:\nYou will receive invoice information as plain text fields, which may include:\nInvoice No, Invoice Date, Due Date, Company Name, Phone, Email, Total Amount, Bank Name, Account No, IFSC, UPI, and Payment Status.\n\nTask:\nDraft a well-structured, polite, and professional billing email addressed to the Accounts or Billing Team.\n\nGuidelines:\n\nUse a calm, respectful, and courteous tone.\n\nBegin with a professional greeting.\n\nClearly reference the invoice number, invoice date, due date, and total payable amount.\n\nIf the payment status is “Pending,” include a gentle and respectful payment reminder without sounding demanding.\n\nPresent payment details (bank name, account number, IFSC, UPI) in a clear and readable manner.\n\nClose the email with a polite line offering assistance or clarification.\n\nSign off using the provided company name and contact details only.\n\nDo not assume, add, or fabricate any missing information.\n\nDo not include emojis, markdown, bullet points, explanations, or a subject line.\n\nOutput only the email body text.\n\nKeep the email concise, professional, and between 8 to 12 lines.\n\nOutput:\nReturn only the final drafted email text, ready to be sent.",
+          "maxIterations": 2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        80,
+        -176
+      ],
+      "id": "be600c73-0564-47e3-b9b3-05ceb5f31dd4",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama3.2:latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        80
+      ],
+      "id": "b367bbdf-73cd-455c-9dd9-f03e68a8d055",
+      "name": "llama3.2:latest",
+      "credentials": {
+        "ollamaApi": {
+          "id": "XzeXVzZagz4Tv0n1",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmOllama",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        32
+      ],
+      "id": "13213e1a-2fa4-44c2-81cb-72d9b9163a35",
+      "name": "llama3.2:latest1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "XzeXVzZagz4Tv0n1",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "gemma3:latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        112,
+        80
+      ],
+      "id": "575acc3e-3e08-49ce-a358-249186515edf",
+      "name": "gemma3:latest",
+      "credentials": {
+        "ollamaApi": {
+          "id": "XzeXVzZagz4Tv0n1",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "email_details"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        80
+      ],
+      "id": "7ffce7e3-d741-486c-8d30-59b2f653d535",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "sendTo": "r2@fcts.ac.in",
+        "subject": "billing mail",
+        "emailType": "text",
+        "message": "={{ $('AI Agent').item.json.output }}\n\n{{ $('Download file').item.json.webContentLink }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        528,
+        -176
+      ],
+      "id": "9deb884f-a690-4230-85df-9f08a936f2fc",
+      "name": "Send a message",
+      "webhookId": "a7ee3bae-c9c0-4038-a048-5bf07f8bf564",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "hPuH5quRckLV1ChC",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        -192
+      ],
+      "id": "999edc9c-5db4-4f1f-95d9-8910341b0bc8",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "content": "## Billing email drafting → Invoice data update in Airtable → Email sent to billing team -> Waiting for payment status",
+        "height": 480,
+        "width": 1376,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -32,
+        -272
+      ],
+      "typeVersion": 1,
+      "id": "1b73ea1d-7de4-4e91-ae86-64375d389891",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Text extraction from binary files \n## → Exact text filtration from extracted content",
+        "height": 480,
+        "width": 464,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -496,
+        -272
+      ],
+      "typeVersion": 1,
+      "id": "c65779db-08a4-411c-98ba-629642f7d5a9",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Invoice Source",
+        "height": 480,
+        "width": 304,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -800,
+        -272
+      ],
+      "typeVersion": 1,
+      "id": "d7e603e9-bdca-4c20-a99b-531099b05774",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "# Automated Invoice Management System Workflow",
+        "height": 608,
+        "width": 2144,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -800,
+        -400
+      ],
+      "typeVersion": 1,
+      "id": "d22332e2-6c9d-40da-85e5-aaf0c561a387",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d5845d98-06ce-4d66-932c-95b466340d1a",
+              "leftValue": "={{ $('Information Extractor').item.json.output['Payment Status'] }}",
+              "rightValue": "Completed",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        800,
+        -176
+      ],
+      "id": "a6f1d439-276d-4c85-9851-96ff3aaae388",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 256,
+        "width": 736
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        352,
+        -208
+      ],
+      "typeVersion": 1,
+      "id": "b45a40fe-9046-4576-817c-0369bb48dac6",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appkKaBy1KjRWULsz",
+          "mode": "list",
+          "cachedResultName": "Untitled Base",
+          "cachedResultUrl": "https://airtable.com/appksz"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbluV1O1gmClrmOMj",
+          "mode": "list",
+          "cachedResultName": "inovoice_database",
+          "cachedResultUrl": "https://airtable.com/appkKay1OMj"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Invoice No",
+              "displayName": "Invoice No",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Invoice Date",
+              "displayName": "Invoice Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Due Date",
+              "displayName": "Due Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Total Amount",
+              "displayName": "Total Amount",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Payment Status",
+              "displayName": "Payment Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Completed",
+                  "value": "Completed"
+                },
+                {
+                  "name": "Failed",
+                  "value": "Failed"
+                },
+                {
+                  "name": "Pending",
+                  "value": "Pending"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Company Name",
+              "displayName": "Company Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Bank Name",
+              "displayName": "Bank Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Account No",
+              "displayName": "Account No",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "IFSC",
+              "displayName": "IFSC",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "UPI",
+              "displayName": "UPI",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Invoice File",
+              "displayName": "Invoice File",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        368,
+        -176
+      ],
+      "id": "229e111e-0b06-4861-93d2-a751244b31cd",
+      "name": "Create a record",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "9gBTHW8JpIcMddmx",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appkKaBy1KjRWULsz",
+          "mode": "list",
+          "cachedResultName": "Untitled Base",
+          "cachedResultUrl": "https://airtable.com/appLsz"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbluV1O1gmClrmOMj",
+          "mode": "list",
+          "cachedResultName": "inovoice_database",
+          "cachedResultUrl": "https://airtable.com/appkKauV1Mj"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Google Drive Trigger').item.json.permissions[0].id }}",
+            "Payment Status": "Completed"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Invoice No",
+              "displayName": "Invoice No",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Invoice Date",
+              "displayName": "Invoice Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Due Date",
+              "displayName": "Due Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Total Amount",
+              "displayName": "Total Amount",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Payment Status",
+              "displayName": "Payment Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Completed",
+                  "value": "Completed"
+                },
+                {
+                  "name": "Failed",
+                  "value": "Failed"
+                },
+                {
+                  "name": "Pending",
+                  "value": "Pending"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Company Name",
+              "displayName": "Company Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Bank Name",
+              "displayName": "Bank Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Account No",
+              "displayName": "Account No",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "IFSC",
+              "displayName": "IFSC",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "UPI",
+              "displayName": "UPI",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Invoice File",
+              "displayName": "Invoice File",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        976,
+        -192
+      ],
+      "id": "d3f652fa-9143-4f86-a0f2-0761af77586d",
+      "name": "Update payment status",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "9gBTHW8JpIcMddmx",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 3,
+        "unit": "days"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        -176
+      ],
+      "id": "0962898e-4112-40f0-af77-ac2c33eff389",
+      "name": "Waiting for payment status 2 days",
+      "webhookId": "f4bc44be-04d5-4745-843a-8b2b808a3cb7"
+    }
+  ],
+  "pinData": {
+    "Google Drive Trigger": [
+      {
+        "json": {
+          "parents": [
+            "1JyL3OsXmVmNhPXwThQOexourmw2CDsgZ"
+          ],
+          "lastModifyingUser": {
+            "displayName": "Su Pab",
+            "kind": "drive#user",
+            "me": true,
+            "permissionId": "12888102246676874861",
+            "emailAddress": "such5@mail.com",
+            "photoLink": "https://lh3.googleusercontent.com/a/ACg8ocJUG4e9NPluuJhT4G18DnSMvZUnGHRwiotFIdt8U7h1oJWCLQ=s64"
+          },
+          "owners": [
+            {
+              "displayName": "Sula Parab",
+              "kind": "drive#user",
+              "me": true,
+              "permissionId": "12888102246676874861",
+              "emailAddress": "su@gmail.com",
+              "photoLink": "https://lh3.googleusercontent.com/a/ACg8ocJMvZUnGHRwih1oJWCLQ=s64"
+            }
+          ],
+          "permissions": [
+            {
+              "kind": "drive#permission",
+              "id": "12888102246676874861",
+              "type": "user",
+              "emailAddress": "su52@gmail.com",
+              "role": "owner",
+              "displayName": "Su Parab",
+              "photoLink": "https://lh3.googleusercontent.com/a/ACg8ocJUvZUnGHRwi8UCLQ=s64",
+              "deleted": false,
+              "pendingOwner": false
+            }
+          ],
+          "spaces": [
+            "drive"
+          ],
+          "capabilities": {
+            "canAcceptOwnership": false,
+            "canAddChildren": false,
+            "canAddMyDriveParent": false,
+            "canChangeCopyRequiresWriterPermission": true,
+            "canChangeItemDownloadRestriction": true,
+            "canChangeSecurityUpdateEnabled": false,
+            "canChangeViewersCanCopyContent": true,
+            "canComment": true,
+            "canCopy": true,
+            "canDelete": true,
+            "canDisableInheritedPermissions": false,
+            "canDownload": true,
+            "canEdit": true,
+            "canEnableInheritedPermissions": true,
+            "canListChildren": false,
+            "canModifyContent": true,
+            "canModifyContentRestriction": true,
+            "canModifyEditorContentRestriction": true,
+            "canModifyOwnerContentRestriction": true,
+            "canModifyLabels": false,
+            "canMoveChildrenWithinDrive": false,
+            "canMoveItemIntoTeamDrive": true,
+            "canMoveItemOutOfDrive": true,
+            "canMoveItemWithinDrive": true,
+            "canReadLabels": false,
+            "canReadRevisions": true,
+            "canRemoveChildren": false,
+            "canRemoveContentRestriction": false,
+            "canRemoveMyDriveParent": true,
+            "canRename": true,
+            "canShare": true,
+            "canTrash": true,
+            "canUntrash": true
+          },
+          "permissionIds": [
+            "12888102246676874861"
+          ],
+          "linkShareMetadata": {
+            "securityUpdateEligible": false,
+            "securityUpdateEnabled": true
+          },
+          "downloadRestrictions": {
+            "itemDownloadRestriction": {
+              "restrictedForReaders": false,
+              "restrictedForWriters": false
+            },
+            "effectiveDownloadRestrictionWithContext": {
+              "restrictedForReaders": false,
+              "restrictedForWriters": false
+            }
+          },
+          "kind": "drive#file",
+          "id": "1PpQZYKfgekrzJPemLzpjO6BWje3uVJ_Q",
+          "name": "Invoice No_ INV-2025-001 (1).pdf",
+          "mimeType": "application/pdf",
+          "starred": false,
+          "trashed": false,
+          "explicitlyTrashed": false,
+          "version": "3",
+          "webContentLink": "https://drive.google.com/uc?id=oad",
+          "webViewLink": "https://drive.google.com/file/d/1PpQZivesdk",
+          "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/pdf",
+          "hasThumbnail": true,
+          "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AnZT6GpKW0NgkOu_tX9fzYrkCSmFPA=s220",
+          "thumbnailVersion": "1",
+          "viewedByMe": true,
+          "viewedByMeTime": "2025-12-22T16:46:32.693Z",
+          "createdTime": "2025-12-22T16:46:32.693Z",
+          "modifiedTime": "2025-12-22T16:46:01.000Z",
+          "modifiedByMeTime": "2025-12-22T16:46:01.000Z",
+          "modifiedByMe": true,
+          "shared": false,
+          "ownedByMe": true,
+          "viewersCanCopyContent": true,
+          "copyRequiresWriterPermission": false,
+          "writersCanShare": true,
+          "originalFilename": "Invoice No_ INV-2025-001 (1).pdf",
+          "fullFileExtension": "pdf",
+          "fileExtension": "pdf",
+          "md5Checksum": "9b0c59f6fa86b4c8a6ed27bbc0416fb3",
+          "sha1Checksum": "1e94aabd0d3e9bf4e6e482e52a81b201d395bfb7",
+          "sha256Checksum": "f3ba2bd2d362ac401a6fbfe91c19762d5fce9163d30bd26d3243899bbedc27ea",
+          "size": "60570",
+          "quotaBytesUsed": "60570",
+          "headRevisionId": "0B_4iZfGZhEl3SmlyamJIdVg4OUlIbjhkSXB2bTN6UUVBUURRPQ",
+          "isAppAuthorized": false,
+          "inheritedPermissionsDisabled": false
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "llama3.2:latest": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "llama3.2:latest1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gemma3:latest": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Create a record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Waiting for payment status 2 days",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Update payment status",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a record": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update payment status": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Waiting for payment status 2 days": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "330075d8-879e-46b9-90da-8354795033f1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "558d88703fb65b2d0e44613bc35916258b0f0bf983c5d4730c00c424b77ca36a"
+  },
+  "id": "ooKWfzM2amDbmMtS",
+  "tags": []
+}
